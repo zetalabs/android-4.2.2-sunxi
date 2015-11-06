@@ -41,6 +41,7 @@ DirectVolume::DirectVolume(VolumeManager *vm, const char *label,
     mPaths = new PathCollection();
     for (int i = 0; i < MAX_PARTITIONS; i++)
         mPartMinors[i] = -1;
+    mPartNum = -1;
     mPendingPartMap = 0;
     mDiskMajor = -1;
     mDiskMinor = -1;
@@ -101,18 +102,23 @@ int DirectVolume::handleBlockEvent(NetlinkEvent *evt) {
                 int major = atoi(evt->findParam("MAJOR"));
                 int minor = atoi(evt->findParam("MINOR"));
                 char nodepath[255];
-                
-            #if 1
+
                 mPartsChangeFlag = 0;
                 if (major == 179) {
                     if (!mPartsChangeFlag) {
                         if (!strncmp(mMountpoint, "/mnt/sdcard", strlen("/mnt/sdcard")) &&
                             !strncmp(dp, "/devices/platform/sunxi-mmc.", strlen("/devices/platform/sunxi-mmc."))) {
-                             mPartsChangeFlag = 1;
+                        #ifdef MMCBLK_AS_SDCARD
+                            if (minor == MMCBLK_AS_SDCARD) { //"mmcblk0p14"
+                                mPartsChangeFlag = 1;
+                            }
+                        #else
+                            mPartsChangeFlag = 1;
+                            mPartNum = 0;
+                        #endif
                         }
                     }
                 }
-            #endif
 
                 snprintf(nodepath,
                          sizeof(nodepath), "/dev/block/vold/%d:%d",
@@ -203,7 +209,7 @@ void DirectVolume::handlePartitionAdded(const char *devpath, NetlinkEvent *evt) 
     const char *tmp = evt->findParam("PARTN");
     
     if(mPartsEventCnt > mDiskNumParts){
-        SLOGW("Partition event is to much, mPartsEventCnt=%d, mDiskNumParts=%d\n", mPartsEventCnt, mDiskNumParts);
+        SLOGW("Partition event is too much, mPartsEventCnt=%d, mDiskNumParts=%d\n", mPartsEventCnt, mDiskNumParts);
         mPartsEventCnt = mDiskNumParts;
     }else{
         mPartsEventCnt++;
@@ -237,6 +243,11 @@ void DirectVolume::handlePartitionAdded(const char *devpath, NetlinkEvent *evt) 
         SLOGE("Dv:partAdd: ignoring part_num = %d (max: %d)\n", part_num, MAX_PARTITIONS-1);
     } else {
         mPartMinors[part_num -1] = minor;
+#ifdef MMCBLK_AS_SDCARD
+        if (mPartsChangeFlag && (mPartNum == -1)) {
+            mPartNum = part_num -1;
+        }
+#endif
     }
    // mPendingPartMap &= ~(1 << part_num);
    mPendingPartMap &= ~(1 << mPartsEventCnt);
@@ -401,7 +412,8 @@ int DirectVolume::getDeviceNodes(dev_t *devs, int max) {
         }
         else
         {
-            devs[0] = MKDEV(mDiskMajor, mPartMinors[0]);
+            //devs[0] = MKDEV(mDiskMajor, mPartMinors[0]);
+            devs[0] = MKDEV(mDiskMajor, mPartMinors[mPartNum]);
             return 1;	
         }
     }

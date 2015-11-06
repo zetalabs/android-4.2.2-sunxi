@@ -42,6 +42,7 @@ protected:
     int            mIsDecrypted;
     int            mFlags;
     int            mPartsChangeFlag;
+    int            mPartNum;
 
 public:
     DirectVolume(VolumeManager *vm, const char *label, const char *mount_point, int partIdx);

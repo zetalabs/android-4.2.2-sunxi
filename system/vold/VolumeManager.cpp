@@ -1482,11 +1482,11 @@ bool VolumeManager::isMountpointMounted(const char *mp)
 int VolumeManager::cleanupAsec(Volume *v, bool force) {
    
     /* Only EXTERNAL_STORAGE needs ASEC cleanup. */
-    const char *externalPath = getenv("EXTERNAL_STORAGE") ?: "/mnt/sdcard";
+    const char *externalPath = getenv("EXTERNAL_STORAGE") ? : "/mnt/sdcard";
     if (0 != strcmp(v->getMountpoint(), externalPath))
         return 0;
 
-	  int rc = unmountAllAsecsInDir(Volume::SEC_ASECDIR_EXT);
+    int rc = unmountAllAsecsInDir(Volume::SEC_ASECDIR_EXT);
 
     AsecIdCollection toUnmount;
     // Find the remaining OBB files that are on external storage.
@@ -1515,6 +1515,5 @@ int VolumeManager::cleanupAsec(Volume *v, bool force) {
     }
 
     return rc;
-
 }
 

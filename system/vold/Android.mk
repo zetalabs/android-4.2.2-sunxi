@@ -1,4 +1,4 @@
-LOCAL_PATH:= $(call my-dir)
+LOCAL_PATH := $(call my-dir)
 
 common_src_files := \
 	VolumeManager.cpp \
@@ -16,10 +16,10 @@ common_src_files := \
 	Devmapper.cpp \
 	ResponseCode.cpp \
 	Xwarp.cpp \
-  cryptfs.c \
-  Exfat.cpp \
-  Ntfs.cpp\
-    iso9660.cpp \
+	cryptfs.c \
+	Exfat.cpp \
+	Ntfs.cpp \
+	iso9660.cpp \
 	Tmpfs.cpp
     
 common_c_includes := \
@@ -52,7 +52,7 @@ include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= vold
+LOCAL_MODULE := vold
 
 LOCAL_SRC_FILES := \
 	main.cpp \
@@ -60,7 +60,13 @@ LOCAL_SRC_FILES := \
 
 LOCAL_C_INCLUDES := $(common_c_includes)
 
-LOCAL_CFLAGS := -Werror=format
+BOARD_MMCBLK_AS_SDCARD := 14
+
+ifneq ($(BOARD_MMCBLK_AS_SDCARD),)
+common_cflags := -DMMCBLK_AS_SDCARD=$(BOARD_MMCBLK_AS_SDCARD)
+endif
+
+LOCAL_CFLAGS := -Werror=format $(common_cflags)
 
 LOCAL_SHARED_LIBRARIES := $(common_shared_libraries)
 
@@ -70,9 +76,9 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES:= vdc.c
+LOCAL_SRC_FILES := vdc.c
 
-LOCAL_MODULE:= vdc
+LOCAL_MODULE := vdc
 
 LOCAL_C_INCLUDES := $(KERNEL_HEADERS)
 

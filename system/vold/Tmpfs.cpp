@@ -35,7 +35,7 @@ int Tmpfs::doMount(const char *mountPoint,
 
     sprintf(mountData,
             "uid=%d,gid=%d",
-            ownerUid, ownerGid, permMask, permMask);
+            ownerUid, ownerGid);
 
     rc = mount("tmpfs", mountPoint, "tmpfs", flags, mountData);
 
