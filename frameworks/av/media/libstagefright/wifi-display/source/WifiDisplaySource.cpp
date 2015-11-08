@@ -791,7 +791,10 @@ status_t WifiDisplaySource::onReceiveM3Response(
         ALOGE("Sink chose its wfd_client_rtp_ports poorly (%s)",
               value.c_str());
 
-        return ERROR_MALFORMED;
+        ALOGE("onReceiveM3Response() SKIP!! port check.");
+        port0 = 19000;
+        port1 = 0;
+        //return ERROR_MALFORMED;
     }
 
     mChosenRTPPort = port0;
@@ -804,6 +807,12 @@ status_t WifiDisplaySource::onReceiveM3Response(
     if  (value == "none") {
         ALOGE("Sink doesn't support audio at all.");
         return ERROR_UNSUPPORTED;
+    }
+
+    if (value == "xxx") {
+        ALOGE("onReceiveM3Response() Force Apply wfd_audio_codecs to AAC");
+        value.clear();
+        value.append("LPCM 00000003 00, AAC 0000000F 00");
     }
 
     uint32_t modes;
@@ -956,6 +965,9 @@ status_t WifiDisplaySource::onReceiveClientData(const sp<AMessage> &msg) {
     AString method;
     AString uri;
     data->getRequestField(0, &method);
+
+    ALOGI("<== <== <== onReceiveClientData() session[%d] method[%s]", sessionID, method.c_str());
+    ALOGI("[%s]", data->debugString().c_str());
 
     int32_t cseq;
     if (!data->findInt32("cseq", &cseq)) {
